@@ -12,6 +12,7 @@ pipeline {
     }
 
     stages {
+
         stage('Build') {
             steps {
                 bat '''
@@ -46,24 +47,26 @@ pipeline {
         }
 
         stage('Deploy') {
-    steps {
-        bat '''
-            docker stop payment >nul 2>&1 || echo No existing payment container
-            docker rm payment >nul 2>&1 || echo No existing payment container
+            steps {
+                bat '''
+                    docker stop payment >nul 2>&1 || echo No existing payment container
+                    docker rm payment >nul 2>&1 || echo No existing payment container
 
-            docker run -d ^
-              --name payment ^
-              -p 8080:8080 ^
-              %IMAGE%:%TAG%
+                    docker run -d ^
+                      --name payment ^
+                      -p 8080:8080 ^
+                      %IMAGE%:%TAG%
 
-            echo.
-            echo ===== DEPLOYMENT INFORMATION =====
-            echo Jenkins Build: %BUILD_NUMBER%
-            echo Git Commit: %GIT_COMMIT%
-            echo Branch: %BRANCH%
-            echo Docker Image: %IMAGE%:%TAG%
-            echo Deployment Port: 8080
-            echo ====================================
-        '''
+                    echo.
+                    echo ===== DEPLOYMENT INFORMATION =====
+                    echo Jenkins Build: %BUILD_NUMBER%
+                    echo Git Commit: %GIT_COMMIT%
+                    echo Branch: %BRANCH%
+                    echo Docker Image: %IMAGE%:%TAG%
+                    echo Deployment Port: 8080
+                    echo ====================================
+                '''
+            }
+        }
     }
 }
