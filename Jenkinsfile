@@ -8,6 +8,7 @@ pipeline {
     environment {
         IMAGE = "payment-api"
         TAG = "${BUILD_NUMBER}"
+        BRANCH = "main"
     }
 
     stages {
@@ -17,7 +18,7 @@ pipeline {
                     docker build ^
                       --build-arg BUILD_NUMBER=%BUILD_NUMBER% ^
                       --build-arg GIT_COMMIT=%GIT_COMMIT% ^
-                      --build-arg BRANCH_NAME=%BRANCH_NAME% ^
+                      --build-arg BRANCH_NAME=%BRANCH% ^
                       -t %IMAGE%:%TAG% .
                 '''
             }
@@ -47,8 +48,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 bat '''
-                    docker stop payment || exit /b 0
-                    docker rm payment || exit /b 0
+                    docker stop payment >nul 2>&1 || echo No existing payment container
+                    docker rm payment >nul 2>&1 || echo No existing payment container
 
                     docker run -d ^
                       --name payment ^
@@ -59,9 +60,13 @@ pipeline {
                     echo ===== DEPLOYMENT INFORMATION =====
                     echo Jenkins Build: %BUILD_NUMBER%
                     echo Git Commit: %GIT_COMMIT%
-                    echo Branch: %BRANCH_NAME%
+                    echo Branch: %BRANCH%
                     echo Docker Image: %IMAGE%:%TAG%
                     echo ====================================
+
+                    docker inspect payment --format="{{index .Config.Labels \"org.opencontainers.image.build\"}}"
+                    docker inspect payment --format="{{index .Config.Labels \"org.opencontainers.image.revision\"}}"
+                    docker inspect payment --format="{{index .Config.Labels \"org.opencontainers.image.branch\"}}"
                 '''
             }
         }
